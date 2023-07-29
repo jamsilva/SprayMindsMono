@@ -4,22 +4,38 @@ import fontforge
 import psMat
 import sys
 
-font = fontforge.open(sys.argv[1]);
+font = fontforge.open(sys.argv[1])
+
 for g in font.glyphs():
     g.transform(psMat.scale(0.94, 1.0))
 
-fnv = font.fontname.split("-");
-if (len(fnv) != 2):
-    raise Exception("Unexpeced fontname")
-style = fnv[1]
-o = font.familyname + " Condensed " + style + ".ttf"
-o = o.replace(" ", "-")
+family_name = font.familyname
 
-font.fontname = fnv[0] + "Condensed-" + style
-font.familyname=font.familyname + " Condensed"
-font.fullname=font.fullname + " Condensed"
+for sfnt_names in font.sfnt_names:
+    lang, strid, val = sfnt_names
 
-d = "./"
+    if strid == 'Preferred Family':
+        family_name = val
+        break
+
+font_name_parts = font.fontname.split('-');
+
+if (len(font_name_parts) != 2):
+    raise Exception('Unexpeced fontname')
+
+font.fontname   = font.fontname.replace('Mono', 'MonoCondensed')
+font.familyname = font.familyname.replace('Mono', 'Mono Condensed')
+font.fullname   = font.fullname.replace('Mono', 'Mono Condensed')
+version         = font.version.split(';')[0]
+font_style      = font_name_parts[1]
+unique_id       = version + ';NM;' + font.fontname + '-' + font_style
+font.appendSFNTName('English (US)', 'UniqueID', unique_id);
+font.appendSFNTName('English (US)', 'Preferred Family', family_name.replace('Mono', 'Mono Condensed'))
+
+o = font.fontname.replace('Condensed ', 'Condensed-').replace(' ', '')
+d = './'
+
 if len(sys.argv) > 2:
-    d = sys.argv[2] + "/"
-font.generate(d + o)
+    d = sys.argv[2] + '/'
+
+font.generate(d + o + '.ttf')
