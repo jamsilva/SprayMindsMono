@@ -58,7 +58,8 @@ variants = [
 old_chars = [
     'J',
     'IJ',
-    'Jcircumflex'
+    'Jcircumflex',
+    'uni0408',
 ]
 
 for v in variants:

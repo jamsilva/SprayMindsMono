@@ -17,8 +17,8 @@ Changes compared to JetBrains Mono include:
 * Slashed zero (`0` swapped with its `.zero` variant).
 * `u` with a downwards bar (`u` and related characters swapped with their `.cv12` variants).
 * Uses the alternate/old `5` (`5` and related characters swapped with their `.cv20` variants).
-* Uses old `J` with a bar on top (copied from version 1.06).
-* Modified `ascent/descent` to workaround the [line height issue][lineBug], copied from version 1.06 (this may cause problems with certain glyphs).
+* Uses old `J` with a bar on top (copied from version 2.001).
+* Modified `ascent/descent` to workaround the [line height issue][lineBug], copied from version 2.001 (this may cause problems with certain glyphs).
 * Additional "Condensed" variant (-6%) available to better utilize horizontal
   screen space.
 
