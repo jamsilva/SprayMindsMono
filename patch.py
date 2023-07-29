@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import fontforge
-import sys
 import os
+import re
+import sys
 
 latest          = sys.argv[1]
 previous        = sys.argv[2]
@@ -18,38 +19,23 @@ if len(font_name_parts) != 2:
 
 font_style = font_name_parts[1]
 
-def swap_glyph(new_font, new_char, old_font, old_char):
-    reserved_codepoint = 0xEBAC;
-    reserved_name = 'EBACkup'
-
-    # Step 1 - old backup
-    old_font.createChar(reserved_codepoint, reserved_name)
+def copy_glyph(new_font, new_char, old_font, old_char):
     old_font.selection.select(old_char)
-    old_font.copy()
-    old_font.selection.select(reserved_name)
-    old_font.paste()
-
-    # Step 2 - copy new to old
-    new_font.selection.select(new_char)
-    new_font.copy()
-    old_font.selection.select(old_char)
-    old_font.paste()
-
-    # Step 3 - copy old backup to new
-    old_font.selection.select(reserved_name)
     old_font.copy()
     new_font.selection.select(new_char)
     new_font.paste()
 
-    # Step 4 - delete old backup
-    old_font.removeGlyph(reserved_name)
-
-def swap_variant_glyphs(font, variant):
+def copy_variant_glyphs(font, variant):
     for glyph in font:
-        if glyph.endswith(variant) and not font[glyph].references:
-            swap_glyph(font, glyph[:-len(variant)], font, glyph)
+        if variant in glyph and not font[glyph].references:
+            copy_glyph(font, glyph[:-len(variant)], font, glyph)
 
-variants = [
+def delete_variants(font):
+    for glyph in font:
+        if re.search('.(ss|cv)[0-9][0-9]', glyph):
+            font.removeGlyph(glyph)
+
+copy_variants = [
     '.zero', # 0
     '.cv12', # u and related chars
     '.cv20', # 5 and related chars
@@ -62,11 +48,13 @@ old_chars = [
     'uni0408',
 ]
 
-for v in variants:
-    swap_variant_glyphs(latest_font, v)
+for v in copy_variants:
+    copy_variant_glyphs(latest_font, v)
 
 for v in old_chars:
-    swap_glyph(latest_font, v, previous_font, v)
+    copy_glyph(latest_font, v, previous_font, v)
+
+delete_variants(latest_font)
 
 # fixup: https://github.com/JetBrains/JetBrainsMono/issues/334
 latest_font.os2_winascent   = previous_font.os2_winascent
