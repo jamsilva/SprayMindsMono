@@ -20,7 +20,7 @@ for sfnt_names in font.sfnt_names:
 
 font_name_parts = font.fontname.split('-');
 
-if (len(font_name_parts) != 2):
+if len(font_name_parts) != 2:
     raise Exception('Unexpeced fontname')
 
 font.fontname   = font.fontname.replace('Mono', 'MonoCondensed')

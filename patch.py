@@ -13,65 +13,59 @@ previous_font = fontforge.open(previous)
 
 font_name_parts = latest_font.fontname.split('-');
 
-if (len(font_name_parts) != 2):
+if len(font_name_parts) != 2:
     raise Exception('Unexpeced fontname')
 
 font_style = font_name_parts[1]
 
-character_variants = {
-        'zero': 'zero.zero',
+def swap_glyph(new_font, new_char, old_font, old_char):
+    reserved_codepoint = 0xEBAC;
+    reserved_name = 'EBACkup'
 
-        # 'five':      'five.cv20',
-        # 'five.dnom': 'five.dnom.cv20',
-        # 'five.numr': 'five.numr.cv20',
+    # Step 1 - old backup
+    old_font.createChar(reserved_codepoint, reserved_name)
+    old_font.selection.select(old_char)
+    old_font.copy()
+    old_font.selection.select(reserved_name)
+    old_font.paste()
 
-        # 'f': 'f.cv09.ss20',
+    # Step 2 - copy new to old
+    new_font.selection.select(new_char)
+    new_font.copy()
+    old_font.selection.select(old_char)
+    old_font.paste()
 
-        # 'g':           'g.cv03',
-        # 'uni01F5':     'uni01F5.cv03',
-        # 'gbreve':      'gbreve.cv03',
-        # 'gcaron':      'gcaron.cv03',
-        # 'gcircumflex': 'gcircumflex.cv03',
-        # 'uni0123':     'uni0123.cv03',
-        # 'gdotaccent':  'gdotaccent.cv03',
+    # Step 3 - copy old backup to new
+    old_font.selection.select(reserved_name)
+    old_font.copy()
+    new_font.selection.select(new_char)
+    new_font.paste()
 
-        'u':             'u.cv12',
-        'uacute':        'uacute.cv12',
-        'ubreve':        'ubreve.cv12',
-        'ucircumflex':   'ucircumflex.cv12',
-        'udieresis':     'udieresis.cv12',
-        'uni1EE5':       'uni1EE5.cv12',
-        'ugrave':        'ugrave.cv12',
-        'uni1EE7':       'uni1EE7.cv12',
-        'uhorn':         'uhorn.cv12',
-        'uni1EE9':       'uni1EE9.cv12',
-        'uni1EF1':       'uni1EF1.cv12',
-        'uni1EEB':       'uni1EEB.cv12',
-        'uni1EED':       'uni1EED.cv12',
-        'uni1EEF':       'uni1EEF.cv12',
-        'uhungarumlaut': 'uhungarumlaut.cv12',
-        'umacron':       'umacron.cv12',
-        'uogonek':       'uogonek.cv12',
-        'uring':         'uring.cv12',
-        'utilde':        'utilde.cv12'
-}
+    # Step 4 - delete old backup
+    old_font.removeGlyph(reserved_name)
 
-old_variants = {
-	'J': 'J'
-}
+def swap_variant_glyphs(font, variant):
+    for glyph in font:
+        if glyph.endswith(variant) and not font[glyph].references:
+            swap_glyph(font, glyph[:-len(variant)], font, glyph)
 
-def replace_glyph(new_font, new_char, old_font, old_char):
-	new_font.removeGlyph(new_char)
-	old_font.selection.select(old_char)
-	old_font.copy()
-	new_font.selection.select(new_char)
-	new_font.paste()
+variants = [
+    '.zero', # 0
+    '.cv12', # u and related chars
+    '.cv20', # 5 and related chars
+]
 
-for k in character_variants.keys():
-    replace_glyph(latest_font, k, latest_font, character_variants[k])
+old_chars = [
+    'J',
+    'IJ',
+    'Jcircumflex'
+]
 
-for k in old_variants.keys():
-    replace_glyph(latest_font, k, previous_font, old_variants[k])
+for v in variants:
+    swap_variant_glyphs(latest_font, v)
+
+for v in old_chars:
+    swap_glyph(latest_font, v, previous_font, v)
 
 # fixup: https://github.com/JetBrains/JetBrainsMono/issues/334
 latest_font.os2_winascent   = previous_font.os2_winascent
